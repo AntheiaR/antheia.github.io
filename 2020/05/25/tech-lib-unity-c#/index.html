@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.1">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.1" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.1">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '7.4.1',
+    exturl: false,
+    sidebar: {"position":"right","display":"hide","offset":12,"onmobile":true},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: 'Copy',
+      copy_success: 'Copied',
+      copy_failure: 'Copy failed'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="调用UnityEngine.Events的触发交互类脚本游戏的一个关键机制是交互。玩家进入某片区域或者碰撞某个物体，触发特定游戏事件，游戏做出反馈。虽然也可以每个事件都独立写一个完整的脚本，但这样对一个哪怕不大的游戏来说也会是一个浩大的工程量。一个基本的省力思路是把这样的需求拆成两部分，一部分是做触发，一部分是做反馈，这样每个事件可以使用一个触发类脚本和一个反馈类脚本，来共同构成这个事件。触发类按">
+<meta name="keywords" content="Code,C#,Unity,Game Dev">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Frequent Use C# Scripts in Unity Game Dev I">
+<meta property="og:url" content="http://yoursite.com/2020/05/25/tech-lib-unity-c#/index.html">
+<meta property="og:site_name" content="Antheia">
+<meta property="og:description" content="调用UnityEngine.Events的触发交互类脚本游戏的一个关键机制是交互。玩家进入某片区域或者碰撞某个物体，触发特定游戏事件，游戏做出反馈。虽然也可以每个事件都独立写一个完整的脚本，但这样对一个哪怕不大的游戏来说也会是一个浩大的工程量。一个基本的省力思路是把这样的需求拆成两部分，一部分是做触发，一部分是做反馈，这样每个事件可以使用一个触发类脚本和一个反馈类脚本，来共同构成这个事件。触发类按">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2020-06-22T02:41:33.532Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Frequent Use C# Scripts in Unity Game Dev I">
+<meta name="twitter:description" content="调用UnityEngine.Events的触发交互类脚本游戏的一个关键机制是交互。玩家进入某片区域或者碰撞某个物体，触发特定游戏事件，游戏做出反馈。虽然也可以每个事件都独立写一个完整的脚本，但这样对一个哪怕不大的游戏来说也会是一个浩大的工程量。一个基本的省力思路是把这样的需求拆成两部分，一部分是做触发，一部分是做反馈，这样每个事件可以使用一个触发类脚本和一个反馈类脚本，来共同构成这个事件。触发类按">
+  <link rel="canonical" href="http://yoursite.com/2020/05/25/tech-lib-unity-c#/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Frequent Use C# Scripts in Unity Game Dev I | Antheia</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Antheia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-what's-new">
+      
+    
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>What's New</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tech">
+      
+    
+
+    <a href="/categories/Tech/" rel="section"><i class="fa fa-fw fa-keyboard-o"></i>Tech</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-game">
+      
+    
+
+    <a href="/categories/Game/" rel="section"><i class="fa fa-fw fa-gamepad"></i>Game</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-eco">
+      
+    
+
+    <a href="/categories/Eco/" rel="section"><i class="fa fa-fw fa-bar-chart"></i>Eco</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-life">
+      
+    
+
+    <a href="/categories/Life/" rel="section"><i class="fa fa-fw fa-paw"></i>Life</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a href="javascript:;" class="popup-trigger">
+        
+          <i class="fa fa-search fa-fw"></i>Search</a>
+      </li>
+    
+  </ul>
+
+    
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="Searching..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/05/25/tech-lib-unity-c#/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Antheia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Antheia">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Frequent Use C# Scripts in Unity Game Dev I
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              
+                
+              
+
+              <time title="Created: 2020-05-25 21:42:24" itemprop="dateCreated datePublished" datetime="2020-05-25T21:42:24+08:00">2020-05-25</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-06-22 10:41:33" itemprop="dateModified" datetime="2020-06-22T10:41:33+08:00">2020-06-22</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Tech/" itemprop="url" rel="index"><span itemprop="name">Tech</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Tech/Code-Lib/" itemprop="url" rel="index"><span itemprop="name">Code Lib</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="调用UnityEngine-Events的触发交互类脚本"><a href="#调用UnityEngine-Events的触发交互类脚本" class="headerlink" title="调用UnityEngine.Events的触发交互类脚本"></a>调用UnityEngine.Events的触发交互类脚本</h3><p>游戏的一个关键机制是交互。玩家进入某片区域或者碰撞某个物体，触发特定游戏事件，游戏做出反馈。<br>虽然也可以每个事件都独立写一个完整的脚本，但这样对一个哪怕不大的游戏来说也会是一个浩大的工程量。一个基本的省力思路是把这样的需求拆成两部分，一部分是做触发，一部分是做反馈，这样每个事件可以使用一个触发类脚本和一个反馈类脚本，来共同构成这个事件。<br>触发类按照Unity引擎的特点大致可以分为两大类，一类是trigger，即进/出某个区域，一类是collision，即碰撞某个物体。除此之外，还会用到的触发机制包括按某个键盘上的按键或鼠标点击，通常这并不单用，而是与trigger或collision结合起来用，比如进入某可收集物品有效范围内并右键点击可拾取。通常，在做游戏的时候最好把这些触发都预写出来，然后在需要触发事件的时候挂上去，再修改其中导向反馈的参数就可以了。<br>反馈类的基本思路是尽可能调用Unity引擎的事件系统，事件系统里本身自带了一些基本的诸如让某个物品激活，或者让某个物品失活的预制选项，活用这些选项就可以完成好些游戏事件的反馈了。而对于事件系统里没有自带的，也可以通过写一个脚本挂上去来自定义，比如读取触发时的某几项数值，并根据事件类型增减数值，或者跳转场景等等，这个后面具体总结，这里先总结不同类型的导向引擎事件系统的触发脚本。</p>
+<h4 id="区域触发交互"><a href="#区域触发交互" class="headerlink" title="区域触发交互"></a>区域触发交互</h4><p>这是用得最广的一种触发，进入某块区域弹出提示、进入某块区域小怪会主动攻击、进入某块区域玩家会掉血、进入某块区域玩家会获取物品等等都会用上它。一个兼容性强的基本写法是：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">using System.Collections;</span><br><span class="line">using System.Collections.Generic;</span><br><span class="line">using UnityEngine;</span><br><span class="line">using UnityEngine.Events;</span><br><span class="line"></span><br><span class="line">[RequireComponent(typeof(Collider))]</span><br><span class="line">public class InteractOnTrigger : MonoBehaviour</span><br><span class="line">&#123;</span><br><span class="line">    </span><br><span class="line">        public bool OnlyForOnce;</span><br><span class="line">        public LayerMask layers;</span><br><span class="line">        public UnityEvent OnEnter, OnExit;</span><br><span class="line">        new Collider collider;</span><br><span class="line">        </span><br><span class="line"></span><br><span class="line">        void Reset()</span><br><span class="line">        &#123;</span><br><span class="line">            layers = LayerMask.NameToLayer(<span class="string">"Everything"</span>);</span><br><span class="line">            collider = GetComponent&lt;Collider&gt;();</span><br><span class="line">            collider.isTrigger = <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        void OnTriggerEnter(Collider other)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (0 != (layers.value &amp; 1 &lt;&lt; other.gameObject.layer))</span><br><span class="line">            &#123;</span><br><span class="line">            	ExecuteOnEnter(other);</span><br><span class="line">        	&#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        protected virtual void ExecuteOnEnter(Collider other)</span><br><span class="line">        &#123;</span><br><span class="line">            OnEnter.Invoke();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        void OnTriggerExit(Collider other)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (0 != (layers.value &amp; 1 &lt;&lt; other.gameObject.layer))</span><br><span class="line">            &#123;</span><br><span class="line">                ExecuteOnExit(other);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        protected virtual void ExecuteOnExit(Collider other)</span><br><span class="line">        &#123;</span><br><span class="line">            OnExit.Invoke();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (OnlyForOnce == <span class="literal">true</span>)</span><br><span class="line">            &#123;</span><br><span class="line">            Destroy(gameObject);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>几点说明：<br>1.设置了要求物件上必须有collider否则会报错，方便万一忘了挂容易发现。<br>2.设置了检测是否触发的物品所处layer，这是一个超级实用的功能，这里预设的是所有层都算触发trigger，实际用的时候需要选，选这个能解决很多问题，比如某个路障阻止玩家通过但不阻止小怪通过，比如子弹碰到小怪会扣血但玩家碰到小怪不掉血，这些只需要设定只有与某个layer的交互才算触发就行了。另外，用layer能解决一个父子物体的bug,即实际中如果把很多不同的trigger放在一个父物体下，那么会出一个没有碰到指定trigger，而是碰到它的父物体也会触发trigger的bug，而用layer把父物体和子物体分属不同layer就可以规避掉这个bug了。<br>3.设置了一个是否只可触发单次的选项框，虽然这个功能并非必须，也可以手动的把OnExit的事件里设置一个销毁物件来实现，但因为会有很多只可单次触发的事件，只需勾选一下，和需添加一个OnExit事件对比起来还是要减轻许多机械劳动了。</p>
+<h4 id="按键触发交互"><a href="#按键触发交互" class="headerlink" title="按键触发交互"></a>按键触发交互</h4><p>Unity里自带了很多基本设置按键，比如W S A D一类的，这些可以直接进行自定义调整。但有时在特定的情况下需要一些特定的按键，比如某个过场动画按回车跳过，这时就需要手动设置一个按键触发脚本。和其它脚本不同的是，按键脚本的KeyCode没法留空然后在使用时输入特定字符串来实现自定义，unity会报错，因此只能一个按钮一个脚本。但毕竟只是一个创建脚本副本修改两个字符串就完成的工作，而且这样的按键交互情况并不多，如果真的很多，那就需要倒回头去考虑这样的游戏设计是否合理了——毕竟需要玩家记住一大串非主流按键是一件很不游戏的事情。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">using System.Collections;</span><br><span class="line">using System.Collections.Generic;</span><br><span class="line">using UnityEngine;</span><br><span class="line">using UnityEngine.Events;</span><br><span class="line"></span><br><span class="line">public class InteractOnButtonZ : MonoBehaviour</span><br><span class="line">&#123;</span><br><span class="line">    public UnityEvent OnButtonPress;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    // Update is called once per frame</span><br><span class="line"></span><br><span class="line">    void Update()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (Input.GetKeyDown(KeyCode.Z))</span><br><span class="line">        &#123;</span><br><span class="line">            OnButtonPress.Invoke();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果按键是鼠标而非键盘，只需把相应语句修改为下面语句</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (Input.GetMouseButtonDown(0))</span><br></pre></td></tr></table></figure>
+
+<p>即可，其中0代表左键，1代表右键，2代表中键。</p>
+<h4 id="碰撞触发交互"><a href="#碰撞触发交互" class="headerlink" title="碰撞触发交互"></a>碰撞触发交互</h4><p>和trigger类似，collision是另一种常见的触发机制，但我个人不是很爱用这个，因为感觉unity引擎在检测碰撞上问题不大，但在碰撞触发上就经常不太灵敏，事件触发不了，这有可能是设定如此，也可能是检测不到，有人总结过<a href="https://blog.csdn.net/candycat1992/article/details/8942343" target="_blank" rel="noopener">触发机制</a>，但也提到测试出来经常不是触发机制理论上那样，看来这是一个普遍问题。因此除了少部分确实必须通过碰撞来触发的以外，我都更喜欢用trigger来实现，比如和npc对话，虽然可以做成玩家的gameobject和npc的gameobject碰撞触发对话，但有时就干脆在npc的gameobject上面挂一个比npc大一大圈的collider设置为trigger，把触发机制设置为玩家进入trigger区域了。虽然如此，还是有一些用trigger不如collision方便的情景，因此碰撞交互的脚本一般也会简单写一个放在script里，以免偶尔需要用上。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">using System.Collections;</span><br><span class="line">using System.Collections.Generic;</span><br><span class="line">using UnityEngine;</span><br><span class="line">using UnityEngine.Events;</span><br><span class="line"></span><br><span class="line">[RequireComponent(typeof(Collider))]</span><br><span class="line">public class InteractOnCollision : MonoBehaviour</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    public LayerMask layers;</span><br><span class="line">    public UnityEvent OnCollision;</span><br><span class="line"></span><br><span class="line">    void Reset()</span><br><span class="line">    &#123;</span><br><span class="line">        layers = LayerMask.NameToLayer(<span class="string">"Everything"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void OnCollisionEnter(Collision c)</span><br><span class="line">    &#123;</span><br><span class="line">        Debug.Log(c);</span><br><span class="line">        <span class="keyword">if</span> (0 != (layers.value &amp; 1 &lt;&lt; c.transform.gameObject.layer))</span><br><span class="line">        &#123;</span><br><span class="line">            OnCollision.Invoke();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="触发事件后的数值增减类脚本"><a href="#触发事件后的数值增减类脚本" class="headerlink" title="触发事件后的数值增减类脚本"></a>触发事件后的数值增减类脚本</h3><p>前面的脚本完成了对触发的认定，而一旦确认触发事件后，游戏需给出相应反馈，对于触发条件刷出物品或激活行为类，往往用unity的事件系统激活相应gameobject就可以了。但仍有很多类型的事件会更复杂，也不在unity事件系统中有预设，这里先总结一类在很多游戏类别中都一定会用到的事件类型：数值的增减。在rpg和fps中，它表现为玩家和怪物的生命值，以及玩家的得分，而在策略游戏中数值的类别会更多。</p>
+<p>数值增减类的脚本由两类脚本构成，一类是对数值的定义，并且设定初始值，以及定义数值增减的规则，这个脚本是挂在这个数值所属主体身上的，大部分时候来说这个主体是玩家，另一类是对特定事件的数值增减设定，这个脚本和触发脚本一样是挂在触发物体上的，在认定玩家触发了这个事件时，执行数值变更。以玩家生命值举例，第一类脚本的基本写法是：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br></pre></td><td class="code"><pre><span class="line">using System.Collections;</span><br><span class="line">using System.Collections.Generic;</span><br><span class="line">using UnityEngine;</span><br><span class="line">using UnityEngine.SceneManagement;</span><br><span class="line">using UnityEngine.UI;</span><br><span class="line"></span><br><span class="line">public class Health : MonoBehaviour</span><br><span class="line">&#123;</span><br><span class="line">    public enum deathAction &#123; loadLevelWhenDead, doNothingWhenDead &#125;;</span><br><span class="line"></span><br><span class="line">    public <span class="built_in">float</span> healthPoints = 10f;</span><br><span class="line">    public <span class="built_in">float</span> respawnHealthPoints = 10f;      //base health points</span><br><span class="line"></span><br><span class="line">    public int numberOfLives = 1;                   //lives and variables <span class="keyword">for</span> respawning</span><br><span class="line">    public bool isAlive = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">    public Slider slider;</span><br><span class="line"></span><br><span class="line">    public GameObject explosionPrefab;</span><br><span class="line"></span><br><span class="line">    public deathAction onLivesGone = deathAction.doNothingWhenDead;</span><br><span class="line"></span><br><span class="line">    public string LevelToLoad = <span class="string">""</span>;</span><br><span class="line"></span><br><span class="line">    private Vector3 respawnPosition;</span><br><span class="line">    private Quaternion respawnRotation;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    // Start is called before the first frame update</span><br><span class="line">    void Start()</span><br><span class="line">    &#123;</span><br><span class="line">        // store initial position as respawn location</span><br><span class="line">        respawnPosition = transform.position;</span><br><span class="line">        respawnRotation = transform.rotation;</span><br><span class="line"></span><br><span class="line">        slider.value = 1.0f;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (LevelToLoad == <span class="string">""</span>) // default to current scene </span><br><span class="line">        &#123;</span><br><span class="line">            LevelToLoad = SceneManager.GetActiveScene().name;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // Update is called once per frame</span><br><span class="line">    void Update()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (healthPoints &lt;= 0)</span><br><span class="line">        &#123;               // <span class="keyword">if</span> the object is <span class="string">'dead'</span></span><br><span class="line">            numberOfLives--;                    // decrement <span class="comment"># of lives, update lives GUI</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (explosionPrefab != null)</span><br><span class="line">            &#123;</span><br><span class="line">                Instantiate(explosionPrefab, transform.position, Quaternion.identity);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (numberOfLives &gt; 0)</span><br><span class="line">            &#123; // respawn</span><br><span class="line">                transform.position = respawnPosition;   // reset the player to respawn position</span><br><span class="line">                transform.rotation = respawnRotation;</span><br><span class="line">                healthPoints = respawnHealthPoints; // give the player full health again</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123; // here is <span class="built_in">where</span> you <span class="keyword">do</span> stuff once ALL lives are gone)</span><br><span class="line">                isAlive = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">                switch (onLivesGone)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">case</span> deathAction.loadLevelWhenDead:</span><br><span class="line">                        SceneManager.LoadScene(LevelToLoad);</span><br><span class="line">                        <span class="built_in">break</span>;</span><br><span class="line">                    <span class="keyword">case</span> deathAction.doNothingWhenDead:</span><br><span class="line">                        // <span class="keyword">do</span> nothing, death must be handled <span class="keyword">in</span> another way elsewhere</span><br><span class="line">                        <span class="built_in">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                Destroy(gameObject);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void ApplyDamage(<span class="built_in">float</span> amount)</span><br><span class="line">    &#123;</span><br><span class="line">        healthPoints = healthPoints - amount;</span><br><span class="line">        slider.value = (<span class="built_in">float</span>)healthPoints / respawnHealthPoints;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void ApplyHeal(<span class="built_in">float</span> amount)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(healthPoints &lt; respawnHealthPoints)</span><br><span class="line">            &#123;</span><br><span class="line">                healthPoints = healthPoints + amount;</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                healthPoints = respawnHealthPoints;</span><br><span class="line">            &#125;</span><br><span class="line">        </span><br><span class="line">        slider.value = (<span class="built_in">float</span>)healthPoints / respawnHealthPoints;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void ApplyBonusLife(int amount)</span><br><span class="line">    &#123;</span><br><span class="line">        numberOfLives = numberOfLives + amount;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void updateRespawn(Vector3 newRespawnPosition, Quaternion newRespawnRotation)</span><br><span class="line">    &#123;</span><br><span class="line">        respawnPosition = newRespawnPosition;</span><br><span class="line">        respawnRotation = newRespawnRotation;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在设定基本赋值和加减的基础上，加了几个实用的小功能，包括生命条数&gt;1时阵亡后复活重刷的设定、阵亡的特效设定（需另配合特效）、生命值的血条设定（需另配合血条UI）、彻底阵亡后跳转场景设定（需另配合场景）。</p>
+<p>继续这个生命值的例子，在玩家gameobject上挂了前面的脚本后，还需在所有会扣减玩家生命值的物体上挂一个脚本，来在触发事件时执行前面的脚本所定义的函数<code>ApplyDamage</code>，这个脚本的基本写法是：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line">using UnityEngine;</span><br><span class="line">using System.Collections;</span><br><span class="line">using System.Collections.Generic;</span><br><span class="line"></span><br><span class="line">public class Damage : MonoBehaviour </span><br><span class="line">&#123;</span><br><span class="line">    public <span class="built_in">float</span> damageAmount = 10.0f;</span><br><span class="line">    </span><br><span class="line">    public bool damageOnTrigger = <span class="literal">true</span>;</span><br><span class="line">    public bool damageOnCollision = <span class="literal">false</span>;</span><br><span class="line">    public bool continuousDamage = <span class="literal">false</span>;</span><br><span class="line">    public <span class="built_in">float</span> continuousTimeBetweenHits = 0;</span><br><span class="line"></span><br><span class="line">    public bool destroySelfOnImpact = <span class="literal">false</span>;    </span><br><span class="line">    public <span class="built_in">float</span> delayBeforeDestroy = 0.0f;</span><br><span class="line">    public GameObject explosionPrefab;</span><br><span class="line"></span><br><span class="line">    private <span class="built_in">float</span> savedTime = 0;</span><br><span class="line"></span><br><span class="line">    void OnTriggerEnter(Collider collision)      // used <span class="keyword">for</span> things like bullets, <span class="built_in">which</span> are triggers.  </span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (damageOnTrigger) </span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (this.tag == <span class="string">"PlayerBullet"</span> &amp;&amp; collision.gameObject.tag == <span class="string">"Player"</span>) // <span class="keyword">if</span> the player got hit with its own bullets, ignore it</span><br><span class="line">                <span class="built_in">return</span>;</span><br><span class="line">        </span><br><span class="line">                <span class="keyword">if</span> (collision.gameObject.GetComponent&lt;Health&gt; () != null) </span><br><span class="line">                    &#123; </span><br><span class="line">                        // <span class="keyword">if</span> the hit object has the Health script on it, deal damage</span><br><span class="line">                        collision.gameObject.GetComponent&lt;Health&gt; ().ApplyDamage (damageAmount);</span><br><span class="line">        </span><br><span class="line">                        <span class="keyword">if</span> (destroySelfOnImpact) </span><br><span class="line">                            &#123;</span><br><span class="line">                                Destroy (gameObject, delayBeforeDestroy);     // destroy the object whenever it hits something</span><br><span class="line">                            &#125;</span><br><span class="line">            </span><br><span class="line">                        <span class="keyword">if</span> (explosionPrefab != null) </span><br><span class="line">                            &#123;</span><br><span class="line">                                Instantiate (explosionPrefab, transform.position, transform.rotation);</span><br><span class="line">                            &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">            &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    void OnCollisionEnter(Collision collision)      // this is used <span class="keyword">for</span> things that explode on impact and are NOT triggers</span><br><span class="line">    &#123;   </span><br><span class="line">        <span class="keyword">if</span> (damageOnCollision) </span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (this.tag == <span class="string">"PlayerBullet"</span> &amp;&amp; collision.gameObject.tag == <span class="string">"Player"</span>) // <span class="keyword">if</span> the player got hit with its own bullets, ignore it</span><br><span class="line">                <span class="built_in">return</span>;</span><br><span class="line">        </span><br><span class="line">                <span class="keyword">if</span> (collision.gameObject.GetComponent&lt;Health&gt; () != null) </span><br><span class="line">                    &#123; </span><br><span class="line">                        // <span class="keyword">if</span> the hit object has the Health script on it, deal damage</span><br><span class="line">                        collision.gameObject.GetComponent&lt;Health&gt; ().ApplyDamage (damageAmount);</span><br><span class="line">            </span><br><span class="line">                        <span class="keyword">if</span> (destroySelfOnImpact) </span><br><span class="line">                            &#123;</span><br><span class="line">                                Destroy (gameObject, delayBeforeDestroy);     // destroy the object whenever it hits something</span><br><span class="line">                            &#125;</span><br><span class="line">            </span><br><span class="line">                        <span class="keyword">if</span> (explosionPrefab != null) </span><br><span class="line">                            &#123;</span><br><span class="line">                                Instantiate (explosionPrefab, transform.position, transform.rotation);</span><br><span class="line">                            &#125;</span><br><span class="line">                    &#125;   </span><br><span class="line">            &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    void OnTriggerStay(Collider collision) // this is used <span class="keyword">for</span> damage over time things</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (continuousDamage) </span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (collision.gameObject.tag == <span class="string">"Player"</span> &amp;&amp; collision.gameObject.GetComponent&lt;Health&gt; () != null) </span><br><span class="line">                    &#123; </span><br><span class="line">                        // is only triggered <span class="keyword">if</span> whatever it hits is the player</span><br><span class="line">                        <span class="keyword">if</span> (Time.time - savedTime &gt;= continuousTimeBetweenHits) </span><br><span class="line">                            &#123;</span><br><span class="line">                                savedTime = Time.time;</span><br><span class="line">                                collision.gameObject.GetComponent&lt;Health&gt; ().ApplyDamage (damageAmount);</span><br><span class="line">                            &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">            &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>考虑了三种触发情况，一种是进入区域触发扣血，一种是碰撞触发扣血，一种是在区域内持续扣血。触发检测除了是否进入区域/产生碰撞/在区域内以外，注意持续掉血这个是用的trigger而不是collision，主要是因为实际做起来collision的触发不如trigger准确，但需注意如果要设置在某个区域比如岩浆里持续掉血，那么就需要把触发机制设置为trigger才行。和前面说到的layer的用法类似，这里用了tag来区分那些会会触发和不会触发的碰撞物体。另外考虑了自爆怪的情况，可以设置小怪在产生攻击后消失，消失可以设特效（需另配合特效），这在做那种玩家没有武器需要通过走位引导小怪互相攻击的机制时很有用。</p>
+<p>继续这个例子，除了生命数值扣减以外，另一种情形是生命数值增加，类似于吃血包或者在持续回血buff区域停留，和扣减的脚本类似，增加的脚本可以写作：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line">using System.Collections;</span><br><span class="line">using System.Collections.Generic;</span><br><span class="line">using UnityEngine;</span><br><span class="line"></span><br><span class="line">public class HealPlayer : MonoBehaviour</span><br><span class="line">&#123;</span><br><span class="line">    public <span class="built_in">float</span> healAmount = 5.0f;</span><br><span class="line"></span><br><span class="line">    public bool healOnTrigger = <span class="literal">true</span>;</span><br><span class="line">    public bool healOnCollision = <span class="literal">false</span>;</span><br><span class="line">    public bool continuousHeal = <span class="literal">true</span>;</span><br><span class="line">    public <span class="built_in">float</span> continuousTimeBetweenHits = 1.0f;</span><br><span class="line"></span><br><span class="line">    public bool destroySelfOnImpact = <span class="literal">false</span>;    </span><br><span class="line">    public <span class="built_in">float</span> delayBeforeDestroy = 0.0f;</span><br><span class="line">    public GameObject explosionPrefab;</span><br><span class="line"></span><br><span class="line">    private <span class="built_in">float</span> savedTime = 0.0f;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    void OnTriggerEnter(Collider collision)             </span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (healOnTrigger)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (this.tag == <span class="string">"Buff"</span> &amp;&amp; collision.gameObject.tag == <span class="string">"Player"</span>) </span><br><span class="line">            &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (collision.gameObject.GetComponent&lt;Health&gt;() != null)</span><br><span class="line">                &#123;   </span><br><span class="line">                    collision.gameObject.GetComponent&lt;Health&gt;().ApplyHeal(healAmount);</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (destroySelfOnImpact)</span><br><span class="line">                    &#123;</span><br><span class="line">                        Destroy(gameObject, delayBeforeDestroy);    </span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (explosionPrefab != null)</span><br><span class="line">                    &#123;</span><br><span class="line">                        Instantiate(explosionPrefab, transform.position, transform.rotation);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void OnCollisionEnter(Collision collision)                 </span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (healOnCollision)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (this.tag == <span class="string">"Buff"</span> &amp;&amp; collision.gameObject.tag == <span class="string">"Player"</span>) </span><br><span class="line">            &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (collision.gameObject.GetComponent&lt;Health&gt;() != null)</span><br><span class="line">                &#123;   </span><br><span class="line">                    collision.gameObject.GetComponent&lt;Health&gt;().ApplyHeal(healAmount);</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (destroySelfOnImpact)</span><br><span class="line">                    &#123;</span><br><span class="line">                        Destroy(gameObject, delayBeforeDestroy);     </span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (explosionPrefab != null)</span><br><span class="line">                    &#123;</span><br><span class="line">                        Instantiate(explosionPrefab, transform.position, transform.rotation);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void OnTriggerStay(Collider collision)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (continuousHeal)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (collision.gameObject.tag == <span class="string">"Player"</span> &amp;&amp; collision.gameObject.GetComponent&lt;Health&gt;() != null)</span><br><span class="line">            &#123;   </span><br><span class="line">                <span class="keyword">if</span> (Time.time - savedTime &gt;= continuousTimeBetweenHits)</span><br><span class="line">                &#123;</span><br><span class="line">                    collision.gameObject.GetComponent&lt;Health&gt;().ApplyHeal(healAmount);</span><br><span class="line">                    savedTime = Time.time;</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line">                </span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后一个脚本是增加重生机会，和前两个脚本类似，分trigger和collision触发两种，只是没有持续增加功能。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line">using System.Collections;</span><br><span class="line">using System.Collections.Generic;</span><br><span class="line">using UnityEngine;</span><br><span class="line"></span><br><span class="line">public class AddLife : MonoBehaviour</span><br><span class="line">&#123;</span><br><span class="line">    public <span class="built_in">float</span> bonusLifeAmount = 1.0f;</span><br><span class="line"></span><br><span class="line">    public bool addOnTrigger = <span class="literal">true</span>;</span><br><span class="line">    public bool addOnCollision = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    public bool destroySelfOnImpact = <span class="literal">false</span>;    </span><br><span class="line">    public <span class="built_in">float</span> delayBeforeDestroy = 0.0f;</span><br><span class="line">    public GameObject explosionPrefab;</span><br><span class="line">  </span><br><span class="line"></span><br><span class="line">    void OnTriggerEnter(Collider collision)             </span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (addOnTrigger)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (this.tag == <span class="string">"Bonus"</span> &amp;&amp; collision.gameObject.tag == <span class="string">"Player"</span>) </span><br><span class="line">            &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (collision.gameObject.GetComponent&lt;Health&gt;() != null)</span><br><span class="line">                &#123;   </span><br><span class="line">                    collision.gameObject.GetComponent&lt;Health&gt;().ApplyBonusLife(bonusLifeAmount);</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (destroySelfOnImpact)</span><br><span class="line">                    &#123;</span><br><span class="line">                        Destroy(gameObject, delayBeforeDestroy);    </span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (explosionPrefab != null)</span><br><span class="line">                    &#123;</span><br><span class="line">                        Instantiate(explosionPrefab, transform.position, transform.rotation);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void OnCollisionEnter(Collision collision)                 </span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (healOnCollision)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (this.tag == <span class="string">"Bonus"</span> &amp;&amp; collision.gameObject.tag == <span class="string">"Player"</span>) </span><br><span class="line">            &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (collision.gameObject.GetComponent&lt;Health&gt;() != null)</span><br><span class="line">                &#123;   </span><br><span class="line">                    collision.gameObject.GetComponent&lt;Health&gt;().ApplyBonusLife(bonusLifeAmount);</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (destroySelfOnImpact)</span><br><span class="line">                    &#123;</span><br><span class="line">                        Destroy(gameObject, delayBeforeDestroy);     </span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (explosionPrefab != null)</span><br><span class="line">                    &#123;</span><br><span class="line">                        Instantiate(explosionPrefab, transform.position, transform.rotation);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Code/" rel="tag"><i class="fa fa-tag"></i> Code</a>
+            
+              <a href="/tags/C/" rel="tag"><i class="fa fa-tag"></i> C#</a>
+            
+              <a href="/tags/Unity/" rel="tag"><i class="fa fa-tag"></i> Unity</a>
+            
+              <a href="/tags/Game-Dev/" rel="tag"><i class="fa fa-tag"></i> Game Dev</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/05/25/tech-notes-c#/" rel="next" title="C# Study Notes I">
+                  <i class="fa fa-chevron-left"></i> C# Study Notes I
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/05/25/game-project-documents-judas-trial/" rel="prev" title="Game Design Document of Judas' Trial">
+                  Game Design Document of Judas' Trial <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80NjkxNy8yMzQxOA=="></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#调用UnityEngine-Events的触发交互类脚本"><span class="nav-number">1.</span> <span class="nav-text">调用UnityEngine.Events的触发交互类脚本</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#区域触发交互"><span class="nav-number">1.1.</span> <span class="nav-text">区域触发交互</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#按键触发交互"><span class="nav-number">1.2.</span> <span class="nav-text">按键触发交互</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#碰撞触发交互"><span class="nav-number">1.3.</span> <span class="nav-text">碰撞触发交互</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#触发事件后的数值增减类脚本"><span class="nav-number">2.</span> <span class="nav-text">触发事件后的数值增减类脚本</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Antheia</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">categories</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">tags</span>
+        </a>
+      </div>
+    
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Antheia</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.1"></script><script src="/js/motion.js?v=7.4.1"></script>
+<script src="/js/schemes/muse.js?v=7.4.1"></script>
+
+<script src="/js/next-boot.js?v=7.4.1"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="/js/local-search.js?v=7.4.1"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>
